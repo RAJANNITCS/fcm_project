@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body style="background-color:rgb(68, 10, 10);">
+
+    <h1 style="color: white;">Push Notification...</h1>
+    <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="getRegToken()">Get
+    Token</button>
+    <br>
+    <br>
+    <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="refreshToken()">refresh
+    Token</button>
+    <br>
+    <br>
+    <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="deleteToken()">delete
+    Token</button>
+    <script src="https://www.gstatic.com/firebasejs/7.12.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-messaging.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.12.0/firebase-analytics.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyAtF3TNqqK82JChMfS6M6BDMOzsNeH8HO0",
+            authDomain: "fcmproject-a5dda.firebaseapp.com",
+            databaseURL: "https://fcmproject-a5dda.firebaseio.com",
+            projectId: "fcmproject-a5dda",
+            storageBucket: "fcmproject-a5dda.appspot.com",
+            messagingSenderId: "501828232429",
+            appId: "1:501828232429:web:eae7a1faee949c4ed2d8e4"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        // Retrieve a messaging object
+        const messaging = firebase.messaging();
+
+        // Request permission to receive notifications
+        messaging.requestPermission().then(function() {
+                console.log('Notifications permission granted.');
+                if (isTokenSentToServer()) {
+                    consle.log('Token Already send ')
+                } else {
+                    getRegToken();
+                }
+            })
+            .then(function(token) {
+
+            })
+            .catch(function(err) {
+                console.log('Unable to get permission to notify', err);
+            })
+
+        //To retrieve the current token
+        var tokenn;
+
+        function getRegToken(argument) {
+            messaging.getToken().then((currentToken) => {
+                if (currentToken) {
+                    console.log(currentToken)
+                    setTokenSentToServer(true)
+                    tokenn = currentToken;
+                    callapi(tokenn);
+                } else {
+                    // Show permission request.
+                    console.log('No Instance ID token available. Request permission to generate one.');
+                    setTokenSentToServer(false);
+                }
+            }).catch((err) => {
+
+                console.log('An error occurred while retrieving token. ', err);
+                showToken('Error retrieving Instance ID token. ', err);
+                setTokenSentToServer(false);
+            });
+        }
+
+
+        function refreshToken(argument) {
+            console.log(tokenn)
+            messaging.getToken()
+                .then((refreshedToken) => {
+                    console.log('Token refreshed.');
+                    // Indicate that the new Instance ID token has not yet been sent to the
+                    // app server.
+                    setTokenSentToServer(false);
+                    // Send Instance ID token to app server.
+                    sendTokenToServer(refreshedToken);
+                    // ...
+                })
+                .catch((err) => {
+                    console.log('Unable to retrieve refreshed token ', err);
+                    showToken('Unable to retrieve refreshed token ', err);
+                });
+        }
+
+
+
+        function deleteToken() {
+            console.log(tokenn)
+                // Delete Instance ID token.
+                // [START delete_token]
+            messaging.getToken()
+                .then(function(currentToken) {
+                    messaging.deleteToken(currentToken)
+                        .then(function() {
+                            console.log('Token deleted.');
+                            setTokenSentToServer(false);
+                            // [START_EXCLUDE]
+                            // Once token is deleted update UI
+                        })
+                        .catch(function(err) {
+                            console.log('Unable to delete token. ', err);
+                        });
+                    // [END delete_token]
+                })
+                .catch(function(err) {
+                    console.log('Error retrieving Instance ID token. ', err);
+                    showToken('Error retrieving Instance ID token. ', err);
+                });
+
+        }
+
+
+        function setTokenSentToServer(sent) {
+            window.localStorage.setItem('sentToServer', sent ? '1' : '0');
+        }
+
+        function isTokenSentToServer() {
+            return window.localStorage.getItem('sentToServer') === '1';
+        }
+
+        function sendTokenToServer(currentToken) {
+            if (!isTokenSentToServer()) {
+                console.log('Sending token to server...');
+                // TODO(developer): Send the current token to your server.
+                setTokenSentToServer(true);
+            } else {
+                console.log('Token already sent to server so won\'t send it again ' +
+                    'unless it changes');
+            }
+
+        }
+        // Handle incoming messages. Called when:
+        // - a message is received while the app has focus
+        // - the user clicks on an app notification created by a service worker
+        //   `messaging.setBackgroundMessageHandler` handler.
+        messaging.onMessage((payload) => {
+            console.log('Message received. ', payload);
+            // ...
+            var title = payload.notification.title
+            var body = payload.notification.body
+            notification = {
+                // body = payload.notification.body,
+            }
+            var myNotification = new Notification(title, notification);
+        });
+
+
+        function callapi(tokenn) {
+            const url = '/api/v1/webpush?token=' + tokenn + '';
+            fetch(url)
+        }
+    </script>
+
+</body>
+
+
+</html>
