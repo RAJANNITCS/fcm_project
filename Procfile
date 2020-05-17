@@ -1,0 +1,1 @@
+web: gunicorn fcm_firebase.wsgi
