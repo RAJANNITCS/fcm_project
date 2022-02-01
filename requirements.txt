@@ -30,7 +30,7 @@ requests-toolbelt==0.9.1
 service-identity==18.1.0
 six==1.14.0
 sqlparse==0.3.1
-treq==20.4.1
+treq==22.1.0
 Twisted==20.3.0
 txFCM==0.0.1
 urllib3==1.25.9
